@@ -9,6 +9,8 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import { SiweMessage } from "siwe";
 import { getCsrfToken } from "next-auth/react";
 import { DefaultJWT } from "next-auth/jwt";
+import { db } from "./db";
+import { users } from "./db/schema";
 
 declare module "next-auth" {
   interface Session {
@@ -69,32 +71,38 @@ export const authOptions: NextAuthOptions = {
         signedMessage: { label: "Signed Message", type: "text" }, // aka signature
       },
       async authorize(credentials, req) {
-        if (!credentials?.signedMessage || !credentials?.message) {
-          return null;
-        }
+        if (!credentials?.signedMessage || !credentials?.message) return null;
+
         try {
           const siwe = new SiweMessage(JSON.parse(credentials?.message));
+
           const result = await siwe.verify({
             signature: credentials.signedMessage,
             nonce: await getCsrfToken({ req: { headers: req.headers } }),
           });
-          if (!result.success) {
-            throw new Error("Invalid Signature");
-          }
-          if (result.data.statement !== env.NEXT_PUBLIC_SIGNIN_MESSAGE) {
+
+          if (!result.success) throw new Error("Invalid Signature");
+
+          if (result.data.statement !== env.NEXT_PUBLIC_SIGNIN_MESSAGE)
             throw new Error("Statement Mismatch");
-          }
-          if (new Date(result.data.expirationTime as string) < new Date()) {
+
+          if (new Date(result.data.expirationTime as string) < new Date())
             throw new Error("Signature Already expired");
+
+          const user = await db.query.users.findFirst({
+            where: (model, { eq }) => eq(model.address, siwe.address),
+          });
+
+          if (!user) {
+            const [newUser] = await db
+              .insert(users)
+              .values({ address: siwe.address })
+              .returning();
+
+            return newUser ?? null;
           }
-          const userData = await getUserByAddress(siwe.address);
-          if (!userData.user) {
-            const createNewUserData = await createUser({
-              address: siwe.address,
-            });
-            return createNewUserData.user ?? null;
-          }
-          return userData.user;
+
+          return user;
         } catch (error) {
           console.log(error);
           return null;
