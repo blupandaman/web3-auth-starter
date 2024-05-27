@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     url: env.DATABASE_URL,
   },
-  tablesFilter: ["oe-base-platform_*"],
+  tablesFilter: ["web3-auth-starter_*"],
 } satisfies Config;

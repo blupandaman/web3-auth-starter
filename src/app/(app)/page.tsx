@@ -8,9 +8,8 @@ export default async function AppHome() {
 
   return (
     <main className="flex h-full flex-1 flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-2xl font-semibold tracking-tight">User data</h1>
-      <pre className="bg-muted rounded p-4 shadow">
-        {JSON.stringify(session?.user, null, 2)}
+      <pre className="rounded bg-muted p-4 shadow">
+        {JSON.stringify(session, null, 2)}
       </pre>
       <SignOutButton />
     </main>
