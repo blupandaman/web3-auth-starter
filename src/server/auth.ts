@@ -1,4 +1,4 @@
-import { getServerSession, NextAuthOptions } from "next-auth";
+import { getServerSession, type NextAuthOptions } from "next-auth";
 import { env } from "@/env.js";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SiweMessage } from "siwe";
@@ -6,7 +6,7 @@ import { getCsrfToken } from "next-auth/react";
 import { db } from "./db";
 import { users } from "./db/schema";
 import { redirect } from "next/navigation";
-import { DefaultJWT } from "next-auth/jwt";
+import type { DefaultJWT } from "next-auth/jwt";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -77,7 +77,9 @@ export const authOptions: NextAuthOptions = {
         if (!credentials?.signedMessage || !credentials?.message) return null;
 
         try {
-          const siwe = new SiweMessage(JSON.parse(credentials?.message));
+          const siwe = new SiweMessage(
+            JSON.parse(credentials?.message) as string,
+          );
 
           const result = await siwe.verify({
             signature: credentials.signedMessage,
@@ -89,7 +91,7 @@ export const authOptions: NextAuthOptions = {
           if (result.data.statement !== env.NEXT_PUBLIC_SIGNIN_MESSAGE)
             throw new Error("Statement Mismatch");
 
-          if (new Date(result.data.expirationTime as string) < new Date())
+          if (new Date(result.data.expirationTime!) < new Date())
             throw new Error("Signature Already expired");
 
           const user = await db.query.users.findFirst({

@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { SignInCard } from "./_components/sign-in-card";
 
 export const metadata: Metadata = {

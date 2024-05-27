@@ -21,8 +21,46 @@ export function SignInCard() {
   const { open, setOpen } = useModal();
 
   useEffect(() => {
+    async function handleSign() {
+      try {
+        const message = new SiweMessage({
+          domain: window.location.host,
+          uri: window.location.origin,
+          version: "1",
+          address: address,
+          statement: process.env.NEXT_PUBLIC_SIGNIN_MESSAGE,
+          nonce: await getCsrfToken(),
+          chainId: mainnet.id,
+        });
+
+        const signedMessage = await signMessageAsync({
+          message: message.prepareMessage(),
+        });
+
+        setHasSigned(true);
+
+        const response = await signIn("web3", {
+          message: JSON.stringify(message),
+          signedMessage,
+          redirect: true,
+          callbackUrl: "/",
+        });
+
+        if (response?.error) {
+          console.log("Error occured:", response.error);
+          setIsConnecting(false);
+          setIsSigning(false);
+        }
+      } catch (error) {
+        console.log("Error Occured", error);
+        setIsConnecting(false);
+        setIsSigning(false);
+      }
+    }
+
     if (!hasSigned && isConnected && (open || isConnecting)) {
       setIsSigning(true);
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       handleSign();
     }
 
@@ -30,47 +68,18 @@ export function SignInCard() {
       setIsConnecting(false);
       setIsSigning(false);
     }
-  }, [hasSigned, isConnected, isConnecting, error, open]);
+  }, [
+    hasSigned,
+    address,
+    signMessageAsync,
+    isConnected,
+    isConnecting,
+    error,
+    open,
+  ]);
 
   if (!isMounted) {
     return null;
-  }
-
-  async function handleSign() {
-    try {
-      const message = new SiweMessage({
-        domain: window.location.host,
-        uri: window.location.origin,
-        version: "1",
-        address: address,
-        statement: process.env.NEXT_PUBLIC_SIGNIN_MESSAGE,
-        nonce: await getCsrfToken(),
-        chainId: mainnet.id,
-      });
-
-      const signedMessage = await signMessageAsync({
-        message: message.prepareMessage(),
-      });
-
-      setHasSigned(true);
-
-      const response = await signIn("web3", {
-        message: JSON.stringify(message),
-        signedMessage,
-        redirect: true,
-        callbackUrl: "/",
-      });
-
-      if (response?.error) {
-        console.log("Error occured:", response.error);
-        setIsConnecting(false);
-        setIsSigning(false);
-      }
-    } catch (error) {
-      console.log("Error Occured", error);
-      setIsConnecting(false);
-      setIsSigning(false);
-    }
   }
 
   return (
