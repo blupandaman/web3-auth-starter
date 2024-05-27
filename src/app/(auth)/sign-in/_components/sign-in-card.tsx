@@ -6,8 +6,8 @@ import { useAccount, useSignMessage } from "wagmi";
 import { getCsrfToken, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useConnect, useDisconnect } from "wagmi";
-import { useIsMounted } from "./useIsMounted";
 import { useModal } from "connectkit";
+import { useIsMounted } from "../_hooks/use-is-mounted";
 
 export default function SignInCard() {
   const isMounted = useIsMounted();
@@ -16,7 +16,7 @@ export default function SignInCard() {
   const [isSigning, setIsSigning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const { signMessageAsync } = useSignMessage();
-  const { error, isLoading } = useConnect();
+  const { error, isPending } = useConnect();
   const { disconnect } = useDisconnect();
   const { open, setOpen } = useModal();
 
@@ -33,7 +33,7 @@ export default function SignInCard() {
   }, [hasSigned, isConnected, isConnecting, error, open]);
 
   if (!isMounted) {
-    return <></>;
+    return null;
   }
 
   async function handleSign() {
@@ -78,7 +78,7 @@ export default function SignInCard() {
       {!isConnected && (
         <Button
           onClick={() => setOpen(true)}
-          disabled={isLoading || isConnecting || open}
+          disabled={isPending || isConnecting || open}
         >
           Connect Wallet
         </Button>
@@ -88,14 +88,14 @@ export default function SignInCard() {
           <Button
             variant="default"
             onClick={() => setIsConnecting(true)}
-            disabled={isLoading || isConnecting || isSigning}
+            disabled={isPending || isConnecting || isSigning}
           >
             Sign In
           </Button>
           <Button
             variant="default"
             onClick={() => disconnect()}
-            disabled={isLoading || isConnecting || isSigning}
+            disabled={isPending || isConnecting || isSigning}
           >
             Disconnect
           </Button>
