@@ -10,7 +10,7 @@ import { NextAuthProvider } from "./_providers/next-auth";
 export const metadata = {
   title: "Web3 Auth Starter",
   description:
-    "A starter kit that has Web3 based authentication, trpc, and a database hooked up. Created by Blu | @blupandaman.",
+    "A Next.js starter kit that has Web3 based authentication through NextAuth JWTs, tRPC, and Drizzle with Postgres set up. Created by Blu | @blupandaman.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
