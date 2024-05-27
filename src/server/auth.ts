@@ -1,31 +1,36 @@
-import {
-  DefaultSession,
-  DefaultUser,
-  getServerSession,
-  NextAuthOptions,
-} from "next-auth";
+import { getServerSession, NextAuthOptions } from "next-auth";
 import { env } from "@/env.js";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { SiweMessage } from "siwe";
 import { getCsrfToken } from "next-auth/react";
-import { DefaultJWT } from "next-auth/jwt";
 import { db } from "./db";
 import { users } from "./db/schema";
+import { redirect } from "next/navigation";
+import { DefaultJWT } from "next-auth/jwt";
 
+/**
+ * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
+ * object and keep type safety. Also augments `next-auth/jwt` for types from our JWT token.
+ *
+ * @see https://next-auth.js.org/getting-started/typescript#module-augmentation
+ */
 declare module "next-auth" {
   interface Session {
-    user: DefaultSession["user"] & {
+    user: {
       id: string;
       address: string | null;
+      // ...other properties
+      // role: UserRole;
     };
   }
 
-  interface JWT {
-    id: string;
+  interface User {
     address: string | null;
+    // ...other properties
+    // role: UserRole;
   }
 
-  interface User extends DefaultUser {
+  interface JWT extends DefaultJWT {
     id: string;
     address: string | null;
   }
@@ -38,29 +43,27 @@ declare module "next-auth/jwt" {
   }
 }
 
-export type AuthSession = {
-  session: {
-    user: {
-      id: string;
-      address: string | null;
-    };
-  } | null;
-};
-
+/**
+ * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
+ *
+ * @see https://next-auth.js.org/configuration/options
+ */
 export const authOptions: NextAuthOptions = {
   callbacks: {
     jwt: async ({ token, user }) => {
       if (user) {
-        token.id = user.id;
-        token.address = user.address;
+        token.id = user?.id;
+        token.address = user?.address;
       }
       return token;
     },
-    session: async ({ session, token }) => {
-      session.user.id = token.id;
-      session.user.address = token.address;
-      return session;
-    },
+    session: async ({ session, token }) => ({
+      ...session,
+      user: {
+        id: token.id,
+        address: token.address,
+      },
+    }),
   },
   providers: [
     CredentialsProvider({
@@ -99,7 +102,9 @@ export const authOptions: NextAuthOptions = {
               .values({ address: siwe.address })
               .returning();
 
-            return newUser ?? null;
+            if (!newUser) return null;
+
+            return newUser;
           }
 
           return user;
@@ -118,4 +123,17 @@ export const authOptions: NextAuthOptions = {
   },
 };
 
+/**
+ * Wrapper for `getServerSession` so that you don't need to import the `authOptions` in every file.
+ *
+ * @see https://next-auth.js.org/configuration/nextjs
+ */
 export const getServerAuthSession = () => getServerSession(authOptions);
+
+/**
+ * Helper function to redirect to sign-in if there is no session present.
+ */
+export async function checkAuth() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/sign-in");
+}

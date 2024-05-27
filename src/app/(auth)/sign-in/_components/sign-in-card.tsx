@@ -9,7 +9,7 @@ import { useConnect, useDisconnect } from "wagmi";
 import { useModal } from "connectkit";
 import { useIsMounted } from "../_hooks/use-is-mounted";
 
-export default function SignInCard() {
+export function SignInCard() {
   const isMounted = useIsMounted();
   const { address, isConnected } = useAccount();
   const [hasSigned, setHasSigned] = useState(false);
