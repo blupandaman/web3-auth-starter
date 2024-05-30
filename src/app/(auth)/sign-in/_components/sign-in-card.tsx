@@ -83,33 +83,48 @@ export function SignInCard() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center space-y-4">
+    <div className="flex w-full max-w-xs flex-col items-center justify-center space-y-4 rounded-lg border border-foreground p-4">
       {!isConnected && (
         <Button
-          onClick={() => setOpen(true)}
+          onMouseDown={() => setOpen(true)}
           disabled={isPending || isConnecting || open}
+          className="w-full"
         >
           Connect Wallet
         </Button>
       )}
+
       {isConnected && !hasSigned && (
         <>
           <Button
             variant="default"
-            onClick={() => setIsConnecting(true)}
+            onMouseDown={() => setIsConnecting(true)}
             disabled={isPending || isConnecting || isSigning}
+            className="w-full"
           >
             Sign In
           </Button>
           <Button
             variant="default"
-            onClick={() => disconnect()}
+            onMouseDown={() => disconnect()}
             disabled={isPending || isConnecting || isSigning}
+            className="w-full"
           >
             Disconnect
           </Button>
         </>
       )}
-    </main>
+
+      {isConnected && hasSigned && (
+        <div className="grid gap-2 text-center">
+          <p className="text-balance font-semibold text-muted-foreground">
+            Signed In Sucessfully
+          </p>
+          <p className="text-balance text-muted-foreground">
+            Redirecting you to the dashboard...
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
