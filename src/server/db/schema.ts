@@ -1,4 +1,4 @@
-import { index, pgTableCreator, varchar } from "drizzle-orm/pg-core";
+import { index, pgTableCreator, text, varchar } from "drizzle-orm/pg-core";
 import { nanoid } from "nanoid";
 
 /**
@@ -18,6 +18,7 @@ export const users = createTable(
       .primaryKey()
       .$defaultFn(() => nanoid()),
     address: varchar("address", { length: 42 }),
+    username: text("username"),
   },
   (table) => ({
     addressIndex: index("usersAddress_idx").on(table.address),

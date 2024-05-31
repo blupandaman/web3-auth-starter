@@ -9,7 +9,11 @@ export function SignOutButton() {
   const isLoading = status === "loading";
 
   return (
-    <Button disabled={isLoading} onMouseDown={() => signOut()}>
+    <Button
+      variant="secondary"
+      disabled={isLoading}
+      onMouseDown={() => signOut()}
+    >
       {isLoading ? <Loader2 className="size-4 animate-spin" /> : "Sign Out"}
     </Button>
   );
